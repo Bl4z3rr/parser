@@ -1,8 +1,8 @@
 class Parser
-  attr_accessor :pages
+  attr_accessor :pages, :results
 
   def initialize(file_path)
-    if !File.exist?(file_path)
+    unless File.exist?(file_path)
       puts 'Could not find file: ' + file_path
       return
     end
@@ -21,13 +21,13 @@ class Parser
 
   def process_line(line)
     # puts line
-    if line.length == 0
+    if line.gsub(/\s+/, "").length == 0
       return
     end
 
     adress, ip = line.split(' ')
 
-    if (!@pages[adress])
+    unless @pages[adress]
       @pages[adress] = []
     end
 
@@ -38,7 +38,14 @@ class Parser
     visits = {}
     unique_visits = {}
 
+    @results = {}
     result.each do |site, ips|
+
+      @results[site] = {
+        visits: ips.length,
+        unique: ips.uniq.length
+      }
+
       visits[site] = ips.length
       unique_visits[site] = ips.uniq.length
     end
@@ -53,8 +60,12 @@ class Parser
   end
 end
 
-if ARGV[0]
-  parser = Parser.new(ARGV[0])
-else
-  puts "Input file path!"
+# Don't run script in test
+if $0 == __FILE__
+  if ARGV[0]
+    parser = Parser.new(ARGV[0])
+    parser.parse_file(ARGV[0])
+  else
+    puts "Input file path!"
+  end
 end
