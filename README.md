@@ -18,3 +18,5 @@ To run test:
 ```
 Rspec
 ```
+
+![forthebadge](https://forthebadge.com/images/badges/made-with-ruby.svg)
