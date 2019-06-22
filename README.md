@@ -1,4 +1,6 @@
-# SIMPLE PARSER FOR WEB LOGS
+# Readme
+
+Simple parser for web logs
 
 # Installation
 
