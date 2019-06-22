@@ -1,7 +1,12 @@
 class Parser
-  attr_accessor :pages, :results
+  attr_accessor :pages
 
-  def initialize(file_path)
+  def initialize(file_path = nil)
+    unless file_path
+      puts 'Input file path!'
+      return
+    end
+
     unless File.exist?(file_path)
       puts 'Could not find file: ' + file_path
       return
@@ -16,7 +21,7 @@ class Parser
     File.open(file_path,'r').each { |line| process_line(line) }
     puts 'Processing finished!'
 
-    print_result(@pages)
+    process_result(@pages)
   end
 
   def process_line(line)
@@ -34,38 +39,27 @@ class Parser
     @pages[adress].push(ip)
   end
 
-  def print_result(result)
+  def process_result(result)
     visits = {}
     unique_visits = {}
 
-    @results = {}
     result.each do |site, ips|
-
-      @results[site] = {
-        visits: ips.length,
-        unique: ips.uniq.length
-      }
-
       visits[site] = ips.length
       unique_visits[site] = ips.uniq.length
     end
 
-    puts 'Visits'
-    sorted = visits.sort_by { |key, count| -count }
-    sorted.each { |key, count| puts "#{key} #{count}" }
+    print_block('Visits', visits)
+    print_block('Unique visits', unique_visits)
+  end
 
-    puts 'Unique visits'
-    uniue_sorted = unique_visits.sort_by { |key, count| -count }
-    uniue_sorted.each { |key, count| puts "#{key} #{count}" }
+  def print_block(title, data)
+    puts title
+    sorted = data.sort_by { |key, count| -count }
+    sorted.each { |key, count| puts "#{key} #{count}" }
   end
 end
 
-# Don't run script in test
+# Don't run script autamatically in test
 if $0 == __FILE__
-  if ARGV[0]
-    parser = Parser.new(ARGV[0])
-    parser.parse_file(ARGV[0])
-  else
-    puts "Input file path!"
-  end
+  Parser.new(ARGV[0])
 end

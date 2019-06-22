@@ -1,52 +1,43 @@
-require './app/parser'
+require './lib/parser'
 
 describe "Parser", :parser do
-  it "should be initialized with id and file path" do
-    File.open('./test_file.log', 'w') { |file| file.write("
-      test one
-      test two
-      help one
-      help one
-      help one
-    ") }
-
-    parser = Parser.new('test_file.log')
-    result = parser.pages
-
-    expect(parser.results['test'][:visits]).to eq(2)
-    expect(parser.results['test'][:unique]).to eq(2)
-
-    expect(parser.results['help'][:visits]).to eq(3)
-    expect(parser.results['help'][:unique]).to eq(1)
-    # TODO: check permissions
-    # File.delete('./test_file.log')
+  it "should not run parser when no path supplied" do
+    expect { Parser.new }.to output(/Input file path!/).to_stdout
   end
 
   it "should not start when file does not exist" do
     non_existent_file = 'random_file_name.log'
-    test = allow_any_instance_of(Parser)
-      .to receive(:process_file)
-      .and_return(nil)
+    expect { Parser.new(non_existent_file) }.to output(/Could not find file: random_file_name.log/).to_stdout
+  end
 
-    parser = Parser.new(non_existent_file)
+  describe "output" do
+    before(:all) do
+      mock_stream = StringIO.new
+      original_output = $stdout
+      $stdout = mock_stream
 
-    expect(test).not_to have_received(:process_file)
-    # TODO: check permissions
-    # File.delete('./test_file.log')
+      Parser.new('./spec/mock.log')
+      @result = $stdout.string.split(/\n/)
+      $stdout = original_output
+    end
+
+    it "should print duration warning" do
+      expect(@result).to include("Processing file. It may take a while.")
+      expect(@result).to include("Processing finished!")
+    end
+
+    it "should print Visists" do
+      visits_index = @result.find_index('Visits')
+      expect(visits_index).not_to be(nil)
+      expect(@result[visits_index + 1]).to match('help 3')
+      expect(@result[visits_index + 2]).to match('test 2')
+    end
+
+    it "should print Unique visists" do
+      unique_visits_index = @result.find_index('Unique visits')
+      expect(unique_visits_index).not_to be(nil)
+      expect(@result[unique_visits_index + 1]).to match('test 2')
+      expect(@result[unique_visits_index + 2]).to match('help 1')
+    end
   end
 end
-
-#   describe "#file_path" do
-#     it "should return the file path" do
-#       parser = Parser.new({ file_path: "webserver.log" })
-#       expect(parser.file_path).to eq("webserver.log")
-#     end
-#   end
-
-#   describe "#id" do
-#     it "should return the parser id" do
-#       parser = Parser.new({ id: 42 })
-#       expect(parser.id).to eq(42)
-#     end
-#   end
-# end
